@@ -4,7 +4,6 @@ import { useFrame } from '@react-three/fiber'
 import { useEffect, useMemo } from 'react'
 import { buildMeadow } from './buildMeadow'
 import type { Tier } from './quality'
-import type { WindUniforms } from './wind'
 
 interface MeadowProps {
   tier: Tier
@@ -14,17 +13,12 @@ interface MeadowProps {
 }
 
 export function Meadow({ tier, seed, windStrength }: MeadowProps) {
-  const uniforms = useMemo<WindUniforms>(() => ({ uTime: { value: 0 }, uStrength: { value: windStrength } }), [])
-  const meadow = useMemo(() => buildMeadow(tier, seed, uniforms), [tier, seed, uniforms])
-
-  useEffect(() => {
-    uniforms.uStrength.value = windStrength
-  }, [windStrength, uniforms])
+  const meadow = useMemo(() => buildMeadow(tier, seed), [tier, seed])
 
   useEffect(() => () => meadow.dispose(), [meadow])
 
   useFrame(({ clock }) => {
-    uniforms.uTime.value = clock.elapsedTime
+    meadow.setWind(clock.elapsedTime, windStrength)
   })
 
   return <primitive object={meadow.group} />

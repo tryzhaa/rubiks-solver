@@ -1,0 +1,102 @@
+.pill {
+  position: fixed;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 16px;
+  padding: 10px 14px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+  color: #3a3a7a;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.banner {
+  top: 14px;
+  left: 14px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  max-width: calc(100vw - 28px);
+}
+
+.chip {
+  background: #5b5fc7;
+  color: #fff;
+  border-radius: 10px;
+  padding: 2px 8px;
+  font-size: 12px;
+}
+
+.hint {
+  bottom: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  max-width: calc(100vw - 28px);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.bar {
+  top: 14px;
+  right: 14px;
+  display: flex;
+  gap: 6px;
+  padding: 6px;
+}
+
+.bar button {
+  border: 0;
+  background: #ffd23f;
+  border-radius: 12px;
+  padding: 8px 12px;
+  font-weight: 700;
+  font-size: 14px;
+  color: #5a4300;
+  cursor: pointer;
+  min-width: 40px;
+  min-height: 40px;
+}
+
+.bar button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.bar button:focus-visible {
+  outline: 3px solid #5b5fc7;
+  outline-offset: 2px;
+}
+
+.toast {
+  top: 76px;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: min(520px, calc(100vw - 28px));
+  text-align: center;
+}
+
+.message {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  text-align: center;
+  background: #d4ecff;
+  color: #3a3a7a;
+  font-weight: 600;
+}
+
+.message button {
+  margin-top: 12px;
+  border: 0;
+  background: #ffd23f;
+  border-radius: 12px;
+  padding: 10px 16px;
+  font-weight: 700;
+  color: #5a4300;
+  cursor: pointer;
+}

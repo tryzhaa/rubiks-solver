@@ -11,6 +11,10 @@ const GRASS_RADIUS = 30
 
 export interface BuiltMeadow {
   group: THREE.Group
+  /** Read-only view of the wind uniforms shared by every meadow material. */
+  uniforms: Readonly<WindUniforms>
+  /** Call every frame: elapsed seconds and wind strength (0 = still, 1 = full). */
+  setWind: (time: number, strength: number) => void
   dispose: () => void
 }
 
@@ -59,7 +63,8 @@ function buildGrass(count: number, seed: number, uniforms: WindUniforms) {
   return { mesh, geometry, material }
 }
 
-export function buildMeadow(tier: Tier, seed: number, uniforms: WindUniforms): BuiltMeadow {
+export function buildMeadow(tier: Tier, seed: number): BuiltMeadow {
+  const uniforms: WindUniforms = { uTime: { value: 0 }, uStrength: { value: 1 } }
   const counts = countsFor(tier)
   const group = new THREE.Group()
   const geometries: THREE.BufferGeometry[] = []
@@ -128,6 +133,11 @@ export function buildMeadow(tier: Tier, seed: number, uniforms: WindUniforms): B
 
   return {
     group,
+    uniforms,
+    setWind: (time, strength) => {
+      uniforms.uTime.value = time
+      uniforms.uStrength.value = strength
+    },
     dispose: () => {
       geometries.forEach((g) => g.dispose())
       materials.forEach((m) => m.dispose())
