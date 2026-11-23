@@ -6,6 +6,7 @@ import { invertMoves } from '@/cube/moves'
 import { scramble } from '@/cube/state'
 import { usePlayer } from '@/cube/usePlayer'
 import { Message, Overlay } from '@/ui/Overlay'
+import { SceneErrorBoundary } from '@/ui/SceneErrorBoundary'
 import { HOTSPOT_MESSAGES, type HotspotKey } from './hotspots'
 import { mulberry32 } from './layout/random'
 import { type Tier, detectTier } from './quality'
@@ -46,7 +47,7 @@ export default function GardenPage() {
 
   if (!env) return <Message>Loading the garden…</Message>
   if (!env.webgl) {
-    return <Message>This page needs WebGL to draw the 3D garden, and your browser or device has it turned off.</Message>
+    return <Message>This page needs WebGL2 to draw the 3D garden. Your browser or device doesn&apos;t support it or has it turned off.</Message>
   }
   return <Garden env={env} />
 }
@@ -82,16 +83,18 @@ function Garden({ env }: { env: ClientEnv }) {
   return (
     <>
       <div style={{ position: 'fixed', inset: 0 }}>
-        <GardenScene
-          tier={env.tier}
-          seed={SEED}
-          reducedMotion={env.reducedMotion}
-          moves={moves}
-          startMoves={startMoves}
-          player={handle}
-          onHotspot={onHotspot}
-          onContextLost={() => setContextLost(true)}
-        />
+        <SceneErrorBoundary>
+          <GardenScene
+            tier={env.tier}
+            seed={SEED}
+            reducedMotion={env.reducedMotion}
+            moves={moves}
+            startMoves={startMoves}
+            player={handle}
+            onHotspot={onHotspot}
+            onContextLost={() => setContextLost(true)}
+          />
+        </SceneErrorBoundary>
       </div>
       <Overlay
         stepTitle="Yellow cross: L-shape"

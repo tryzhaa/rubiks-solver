@@ -25,7 +25,7 @@ describe('isWebGLAvailable', () => {
     ).toBe(false)
   })
 
-  test('tries webgl2 first, then webgl', () => {
+  test('asks only for webgl2, because three.js no longer supports WebGL1', () => {
     const asked: string[] = []
     isWebGLAvailable(() => ({
       getContext: (type: string) => {
@@ -33,6 +33,17 @@ describe('isWebGLAvailable', () => {
         return null
       },
     }))
-    expect(asked).toEqual(['webgl2', 'webgl'])
+    expect(asked).toEqual(['webgl2'])
+  })
+
+  test('false on a WebGL1-only browser', () => {
+    expect(isWebGLAvailable(() => ({ getContext: (type: string) => (type === 'webgl' ? {} : null) }))).toBe(false)
+  })
+
+  test('releases the probe context so it does not count against the browser limit', () => {
+    let released = false
+    const context = { getExtension: (name: string) => (name === 'WEBGL_lose_context' ? { loseContext: () => (released = true) } : null) }
+    expect(isWebGLAvailable(() => ({ getContext: () => context }))).toBe(true)
+    expect(released).toBe(true)
   })
 })
