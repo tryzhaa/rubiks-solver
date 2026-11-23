@@ -1,8 +1,8 @@
 'use client'
 
 import { OrbitControls, useCursor } from '@react-three/drei'
-import { Canvas } from '@react-three/fiber'
-import { useState } from 'react'
+import { Canvas, useThree } from '@react-three/fiber'
+import { useEffect, useState } from 'react'
 import * as THREE from 'three'
 import { CubeViewer } from '@/cube/CubeViewer'
 import type { Move } from '@/cube/moves'
@@ -10,7 +10,8 @@ import type { PlayerHandle } from '@/cube/usePlayer'
 import { Butterflies } from './Butterflies'
 import { Environment } from './Environment'
 import { Meadow } from './Meadow'
-import { Signpost, WateringCan } from './Props'
+import { BASE_FOV, fovForAspect } from './framing'
+import { CameraProp, Signpost } from './Props'
 import type { HotspotKey } from './hotspots'
 import { type Tier, countsFor } from './quality'
 
@@ -46,13 +47,26 @@ function ClickableCube({ moves, startMoves, player, onHotspot }: Pick<GardenScen
   )
 }
 
+/** Widens the view on portrait screens so the garden props stay in frame. */
+function ResponsiveFov() {
+  const get = useThree((s) => s.get)
+  const aspect = useThree((s) => s.size.width / s.size.height)
+  useEffect(() => {
+    const { camera } = get()
+    if (!(camera instanceof THREE.PerspectiveCamera)) return
+    camera.fov = fovForAspect(aspect)
+    camera.updateProjectionMatrix()
+  }, [get, aspect])
+  return null
+}
+
 export default function GardenScene(props: GardenSceneProps) {
   const { tier, seed, reducedMotion, moves, startMoves, player, onHotspot, onContextLost } = props
   return (
     <Canvas
       shadows="percentage"
       dpr={[1, 2]}
-      camera={{ position: [9, 2, 13], fov: 50, near: 0.1, far: 300 }}
+      camera={{ position: [9, 2, 13], fov: BASE_FOV, near: 0.1, far: 300 }}
       gl={{ antialias: true, toneMapping: THREE.NoToneMapping }}
       onCreated={({ gl }) => {
         gl.domElement.addEventListener('webglcontextlost', (event) => {
@@ -61,10 +75,11 @@ export default function GardenScene(props: GardenSceneProps) {
         })
       }}
     >
+      <ResponsiveFov />
       <Environment />
       <Meadow tier={tier} seed={seed} windStrength={reducedMotion ? 0 : 1} />
       <ClickableCube moves={moves} startMoves={startMoves} player={player} onHotspot={onHotspot} />
-      <WateringCan onHotspot={onHotspot} />
+      <CameraProp onHotspot={onHotspot} />
       <Signpost onHotspot={onHotspot} />
       <Butterflies count={countsFor(tier).butterflies} seed={seed} still={reducedMotion} onHotspot={onHotspot} />
       <OrbitControls

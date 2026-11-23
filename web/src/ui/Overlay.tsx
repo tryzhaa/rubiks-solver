@@ -53,8 +53,8 @@ export function Overlay({
       </div>
 
       <div className={`${styles.pill} ${styles.hint}`}>
-        <span className={styles.chip}>Drag</span> look around <span className={styles.chip}>Click</span> the watering
-        can, signpost or a butterfly
+        <span className={styles.chip}>Drag</span> look around <span className={styles.chip}>Click</span> the camera,
+        signpost or a butterfly
       </div>
 
       {toast && (

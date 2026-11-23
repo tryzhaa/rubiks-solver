@@ -31,7 +31,7 @@ A public web app that teaches people to solve a 3x3 Rubik's cube. The user scans
 - Cloud accounts on GCP; email + Google sign-in; colour data only; manual colour editor; random scramble practice mode; letter labels (W/Y/R/O/G/B) on stickers in edit screens; invalid scans highlight likely errors.
 - Public audience; online only; phone and laptop equally; build in layers.
 - Scene: bright low-poly-in-spirit 3D garden (reference: 3dgarden.app Cozy Isle, reference photos of wildflower meadows). Cube floats above the flowers, glossy plastic with slightly rounded edges. Tall-stemmed flowers swaying in rolling wind gusts, toned-down pastel colours, sparse butterflies, big sky with clouds, camera low among the flowers.
-- Garden controls: watering can = scan, signpost = technique guide + My solves, butterfly = hint. Sound: soft ambience (birds, breeze) + cube move clicks, with mute.
+- Garden controls: camera on a tripod = scan (replaced the watering can, user request 2026-11-23), signpost = technique guide + My solves, butterfly = hint. Sound: soft ambience (birds, breeze) + cube move clicks, with mute.
 - Frontend: Next.js (App Router) with React and react-three-fiber (user asked for "proper React Next.js code").
 
 ## Decisions made by the builder (not yet confirmed)
