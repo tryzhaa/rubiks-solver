@@ -3,14 +3,19 @@
   inset: 0;
   z-index: 10;
   display: grid;
-  place-items: center;
+  /* A column that can shrink below its content, so the card never grows past the screen. */
+  grid-template-columns: minmax(0, 560px);
+  justify-content: center;
+  align-content: center;
   padding: 12px;
   background: rgba(20, 30, 60, 0.45);
 }
 
 .card {
   position: relative;
-  width: min(560px, 100%);
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
   max-height: calc(100dvh - 24px);
   overflow-y: auto;
   background: #fff;
@@ -164,7 +169,7 @@
 
 .net {
   display: grid;
-  grid-template-columns: repeat(12, 1fr);
+  grid-template-columns: repeat(12, minmax(0, 1fr));
   gap: 2px;
   width: 100%;
   max-width: 480px;
@@ -172,6 +177,7 @@
 }
 
 .sticker {
+  position: relative;
   aspect-ratio: 1;
   padding: 0;
   border: 1px solid rgba(0, 0, 0, 0.25);
@@ -187,13 +193,19 @@
   opacity: 1;
 }
 
+/* White then red ring, so the mark shows on red stickers too. */
 .marked {
-  outline: 3px solid #e0223a;
-  outline-offset: -1px;
+  box-shadow:
+    0 0 0 2px #fff,
+    0 0 0 4px #b3142a;
+  z-index: 1;
 }
 
 .selected {
-  box-shadow: 0 0 0 3px #5b5fc7;
+  box-shadow:
+    0 0 0 2px #fff,
+    0 0 0 4px #5b5fc7;
+  z-index: 2;
 }
 
 .palette {
