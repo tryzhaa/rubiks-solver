@@ -61,10 +61,11 @@
   cursor: pointer;
 }
 
+/* The whole camera picture (not cropped), so a face anywhere in view is visible. */
 .preview {
   position: relative;
-  width: min(100%, 52vh, 420px);
-  aspect-ratio: 1;
+  width: min(100%, 480px);
+  aspect-ratio: 4 / 3;
   margin: 0 auto;
   overflow: hidden;
   border-radius: 14px;
@@ -76,13 +77,12 @@
   inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
 }
 
-/* The 3x3 guide: the central 60% square, matching gridRect() on the camera frame. */
+/* The 3x3 outline: on the face when one is found, else the dashed centred guide (gridRect). */
 .grid {
   position: absolute;
-  inset: 20%;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   grid-template-rows: repeat(3, 1fr);
@@ -91,13 +91,18 @@
 }
 
 .cell {
-  border: 2px solid rgba(255, 255, 255, 0.85);
+  border: 2px dashed rgba(255, 255, 255, 0.7);
   border-radius: 8px;
   display: grid;
   place-items: center;
 }
 
 /* Live colour seen in the cell, labelled with its best-guess letter. */
+.found .cell {
+  border-style: solid;
+  border-color: #ffd23f;
+}
+
 .swatch {
   width: 44%;
   aspect-ratio: 1;

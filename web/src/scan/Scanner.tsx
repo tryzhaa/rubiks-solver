@@ -8,7 +8,8 @@ import { CAMERA_MESSAGES, type CameraFailure, canRetry } from './camera'
 import type { RGB } from './colour'
 import { CubeNet } from './CubeNet'
 import { LETTERS, SCAN_ORDER, STICKER_HEX } from './faces'
-import { sampleGrid } from './sample'
+import { type Rect, locateFace, rectsSteady } from './locate'
+import { gridRect, sampleGrid } from './sample'
 import { type ScanAction, type ScanState, initialScan, scanReducer } from './scanFlow'
 import styles from './scanner.module.css'
 import { useCamera } from './useCamera'
@@ -97,7 +98,9 @@ function StageHeading({ children }: { children: React.ReactNode }) {
 /** Mounted only on the camera stage, so leaving it always turns the camera off. */
 function CameraStage({ scan, dispatch }: { scan: ScanState; dispatch: (a: ScanAction) => void }) {
   const { status, videoRef, retry } = useCamera()
-  const [samples, setSamples] = useState<RGB[] | null>(null)
+  // What the latest frame showed: the face's place (null = not found, the centred guide is read) and its colours.
+  const [view, setView] = useState<{ samples: RGB[]; rect: Rect | null; width: number; height: number } | null>(null)
+  const samples = view?.samples ?? null
   const [stored, setStored] = useState<string | null>(null)
   const current = SCAN_ORDER[scan.face]
   const expected = current.face
@@ -113,6 +116,7 @@ function CameraStage({ scan, dispatch }: { scan: ScanState; dispatch: (a: ScanAc
     if (status !== 'live') return
     // Recent frames for this face; a face held still with the right centre is stored automatically.
     let frames: RGB[][] = []
+    let rects: (Rect | null)[] = []
     const canvas = document.createElement('canvas')
     const context = canvas.getContext('2d', { willReadFrequently: true })
     const timer = setInterval(() => {
@@ -126,28 +130,50 @@ function CameraStage({ scan, dispatch }: { scan: ScanState; dispatch: (a: ScanAc
         canvas.height = height
       }
       context.drawImage(video, 0, 0, width, height)
-      const latest = sampleGrid(context.getImageData(0, 0, width, height).data, width, height)
-      setSamples(latest)
+      const pixels = context.getImageData(0, 0, width, height).data
+      // Find the face anywhere in the picture; without one, read the centred guide.
+      const rect = locateFace(pixels, width, height)
+      const latest = sampleGrid(pixels, width, height, rect ?? gridRect(width, height))
+      setView({ samples: latest, rect, width, height })
       frames = [...frames, latest].slice(-STEADY_FRAMES)
-      if (autoCaptureReady(frames, expected)) {
+      rects = [...rects, rect].slice(-STEADY_FRAMES)
+      const samePlace = rects.every((r) => r === null) || rectsSteady(rects)
+      if (samePlace && autoCaptureReady(frames, expected)) {
         dispatch({ type: 'capture', samples: averageFrames(frames) })
         setStored(SCAN_ORDER.find((f) => f.face === expected)!.colour)
         frames = []
+        rects = []
       }
     }, SAMPLE_MS)
     return () => clearInterval(timer)
   }, [status, videoRef, expected, dispatch])
 
   const failed = status !== 'idle' && status !== 'starting' && status !== 'live'
+  const frameWidth = view?.width ?? 4
+  const frameHeight = view?.height ?? 3
+  const box = view?.rect ?? gridRect(frameWidth, frameHeight)
+  const boxStyle = {
+    left: `${(box.x / frameWidth) * 100}%`,
+    top: `${(box.y / frameHeight) * 100}%`,
+    width: `${(box.size / frameWidth) * 100}%`,
+    height: `${(box.size / frameHeight) * 100}%`,
+  }
   return (
     <>
       <StageHeading>
         Scan face {scan.face + 1} of 6: {current.colour}
       </StageHeading>
       <p className={styles.instruction}>{current.instruction}</p>
-      <div className={styles.preview}>
+      <div
+        className={styles.preview}
+        // Keep the camera's own proportions, at most about half the screen tall.
+        style={{
+          aspectRatio: `${frameWidth} / ${frameHeight}`,
+          width: `min(100%, 480px, ${((52 * frameWidth) / frameHeight).toFixed(1)}vh)`,
+        }}
+      >
         <video ref={videoRef} playsInline muted />
-        <div className={styles.grid} aria-hidden="true">
+        <div className={`${styles.grid} ${view?.rect ? styles.found : ''}`} style={boxStyle} aria-hidden="true">
           {Array.from({ length: 9 }, (_, i) => (
             <div key={i} className={styles.cell} style={i === 4 ? { borderColor: STICKER_HEX[current.face] } : undefined}>
               {samples && (
@@ -176,7 +202,9 @@ function CameraStage({ scan, dispatch }: { scan: ScanState; dispatch: (a: ScanAc
         {stored
           ? `Got it: ${stored} ✓`
           : status === 'live'
-            ? 'Hold the face steady inside the grid. It is stored by itself.'
+            ? view?.rect
+              ? 'Face found. Hold it still for a moment.'
+              : 'Hold the face up anywhere in view. It is stored by itself.'
             : ''}
       </p>
       <FaceChips scan={scan} dispatch={dispatch} />

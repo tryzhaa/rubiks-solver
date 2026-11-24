@@ -75,6 +75,24 @@ describe('locateFace', () => {
     near(locateFace(px, W, H), rect)
   })
 
+  test('finds a face held in front of a white wall', () => {
+    const px = blank()
+    fill(px, 0, 0, W, 110, [232, 232, 228])
+    const rect = { x: 20, y: 20, size: 120 }
+    paintFace(px, rect, 'RBDDFRUFB')
+    near(locateFace(px, W, H), rect)
+  })
+
+  test('finds a stickerless face (no black lines between stickers)', () => {
+    const px = blank()
+    const rect = { x: 90, y: 60, size: 120 }
+    const cell = rect.size / 3
+    'FFRFFRUUD'.split('').forEach((c, i) =>
+      fill(px, rect.x + (i % 3) * cell, rect.y + Math.floor(i / 3) * cell, cell, cell, PALETTE[c]),
+    )
+    near(locateFace(px, W, H), rect)
+  })
+
   test('a skin-coloured hand beside the face does not stretch it', () => {
     const px = blank()
     const rect = { x: 100, y: 60, size: 120 }
