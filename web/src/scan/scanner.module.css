@@ -1,0 +1,224 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: grid;
+  place-items: center;
+  padding: 12px;
+  background: rgba(20, 30, 60, 0.45);
+}
+
+.card {
+  position: relative;
+  width: min(560px, 100%);
+  max-height: calc(100dvh - 24px);
+  overflow-y: auto;
+  background: #fff;
+  border-radius: 20px;
+  padding: 18px 16px 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  color: #3a3a7a;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.card h2 {
+  margin: 0 36px 4px 0;
+  font-size: 18px;
+}
+
+.instruction {
+  margin: 0 0 12px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 50%;
+  background: #eef0ff;
+  color: #3a3a7a;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.preview {
+  position: relative;
+  width: min(100%, 52vh, 420px);
+  aspect-ratio: 1;
+  margin: 0 auto;
+  overflow: hidden;
+  border-radius: 14px;
+  background: #223;
+}
+
+.preview video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* The 3x3 guide: the central 60% square, matching gridRect() on the camera frame. */
+.grid {
+  position: absolute;
+  inset: 20%;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  gap: 4px;
+  pointer-events: none;
+}
+
+.cell {
+  border: 2px solid rgba(255, 255, 255, 0.85);
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+}
+
+.swatch {
+  width: 36%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+}
+
+.notice {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.95);
+  line-height: 1.45;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  margin: 12px 0;
+}
+
+.chip {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  padding: 4px 10px;
+  background: #eef0ff;
+  color: #3a3a7a;
+  font-weight: 700;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.chipCurrent {
+  border-color: #5b5fc7;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.actions button,
+.notice button {
+  border: 0;
+  border-radius: 12px;
+  padding: 10px 14px;
+  min-height: 40px;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  background: #eef0ff;
+  color: #3a3a7a;
+}
+
+.actions .primary,
+.notice .primary {
+  background: #ffd23f;
+  color: #5a4300;
+}
+
+.actions button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.card button:focus-visible {
+  outline: 3px solid #5b5fc7;
+  outline-offset: 2px;
+}
+
+.net {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 2px;
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.sticker {
+  aspect-ratio: 1;
+  padding: 0;
+  border: 1px solid rgba(0, 0, 0, 0.25);
+  border-radius: 4px;
+  font-weight: 800;
+  font-size: clamp(9px, 2.6vw, 13px);
+  color: #222;
+  cursor: pointer;
+}
+
+.sticker:disabled {
+  cursor: default;
+  opacity: 1;
+}
+
+.marked {
+  outline: 3px solid #e0223a;
+  outline-offset: -1px;
+}
+
+.selected {
+  box-shadow: 0 0 0 3px #5b5fc7;
+}
+
+.palette {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.palette button {
+  width: 40px;
+  height: 40px;
+  border: 1px solid rgba(0, 0, 0, 0.25);
+  border-radius: 8px;
+  font-weight: 800;
+  color: #222;
+  cursor: pointer;
+}
+
+.status {
+  margin: 12px 0 0;
+  text-align: center;
+  line-height: 1.4;
+}
+
+.statusBad {
+  color: #b3142a;
+}
