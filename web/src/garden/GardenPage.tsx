@@ -85,8 +85,9 @@ function Garden({ env }: { env: ClientEnv }) {
       return
     }
     setPuzzle(next)
-    handle.dispatch({ type: 'reset' })
-  }, [handle])
+    // A new scramble plays from the start, even after a finished solve (unless motion is reduced).
+    handle.dispatch({ type: 'reset', playing: !env.reducedMotion })
+  }, [handle, env.reducedMotion])
 
   const onHotspot = useCallback((key: HotspotKey) => {
     setToast(HOTSPOT_MESSAGES[key])

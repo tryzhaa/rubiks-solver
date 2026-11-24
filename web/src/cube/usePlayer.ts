@@ -20,7 +20,8 @@ export type PlayerAction =
   | { type: 'prev' }
   | { type: 'setSpeed'; speed: number }
   | { type: 'tick'; dt: number; moveCount: number }
-  | { type: 'reset' }
+  /** Back to move 0; `playing` sets whether it plays from there (unchanged when omitted). */
+  | { type: 'reset'; playing?: boolean }
 
 export function createPlayerState(startPaused: boolean): PlayerState {
   return { index: 0, progress: 0, playing: !startPaused, speed: 1 }
@@ -39,7 +40,7 @@ export function playerReducer(state: PlayerState, action: PlayerAction): PlayerS
     case 'prev':
       return { ...state, index: Math.max(0, state.index - 1), progress: 0, playing: false }
     case 'reset':
-      return { ...state, index: 0, progress: 0 }
+      return { ...state, index: 0, progress: 0, playing: action.playing ?? state.playing }
     case 'setSpeed':
       return action.speed > 0 ? { ...state, speed: action.speed } : state
     case 'tick': {

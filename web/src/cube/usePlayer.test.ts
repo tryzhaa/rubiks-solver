@@ -100,3 +100,11 @@ describe('reset', () => {
     expect(s).toMatchObject({ index: 0, progress: 0, playing: true })
   })
 })
+
+describe('reset with playing', () => {
+  test('a new scramble after a finished solve can start playing again', () => {
+    const finished = { ...createPlayerState(false), index: 136, playing: false }
+    expect(playerReducer(finished, { type: 'reset', playing: true })).toMatchObject({ index: 0, playing: true })
+    expect(playerReducer(finished, { type: 'reset', playing: false })).toMatchObject({ index: 0, playing: false })
+  })
+})
