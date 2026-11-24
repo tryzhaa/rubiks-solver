@@ -32,6 +32,15 @@
   font-size: 18px;
 }
 
+.heading:focus {
+  outline: none;
+}
+
+.heading:focus-visible {
+  outline: 3px solid #5b5fc7;
+  outline-offset: 2px;
+}
+
 .instruction {
   margin: 0 0 12px;
   font-weight: 500;

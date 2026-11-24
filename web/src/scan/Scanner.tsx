@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useReducer, useState } from 'react'
+import { useEffect, useMemo, useReducer, useRef, useState } from 'react'
 import type { Face } from '@/cube/moves'
 import { type Solution, solve } from '@/solver/solve'
 import { CAMERA_MESSAGES, type CameraFailure, canRetry } from './camera'
@@ -28,6 +28,14 @@ interface ScannerProps {
 /** Guided six-face scan, then a flat editor to check and fix the colours before solving. */
 export function Scanner({ onClose, onSolved }: ScannerProps) {
   const [scan, dispatch] = useReducer(scanReducer, initialScan)
+
+  // Give focus back to whatever had it before the scanner opened.
+  useEffect(() => {
+    const before = document.activeElement
+    return () => {
+      if (before instanceof HTMLElement && before.isConnected) before.focus()
+    }
+  }, [])
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -72,6 +80,17 @@ function FaceChips({ scan, dispatch }: { scan: ScanState; dispatch: (a: ScanActi
   )
 }
 
+/** A stage heading that takes focus when the stage appears, so keyboard and screen-reader users start there. */
+function StageHeading({ children }: { children: React.ReactNode }) {
+  const ref = useRef<HTMLHeadingElement>(null)
+  useEffect(() => ref.current?.focus(), [])
+  return (
+    <h2 ref={ref} tabIndex={-1} className={styles.heading}>
+      {children}
+    </h2>
+  )
+}
+
 /** Mounted only on the camera stage, so leaving it always turns the camera off. */
 function CameraStage({ scan, dispatch }: { scan: ScanState; dispatch: (a: ScanAction) => void }) {
   const { status, videoRef, retry } = useCamera()
@@ -101,9 +120,9 @@ function CameraStage({ scan, dispatch }: { scan: ScanState; dispatch: (a: ScanAc
   const failed = status !== 'idle' && status !== 'starting' && status !== 'live'
   return (
     <>
-      <h2>
+      <StageHeading>
         Scan face {scan.face + 1} of 6: {current.colour}
-      </h2>
+      </StageHeading>
       <p className={styles.instruction}>{current.instruction}</p>
       <div className={styles.preview}>
         <video ref={videoRef} playsInline muted />
@@ -191,7 +210,7 @@ function ReviewStage({
   const message = solveError ?? (validation.ok ? 'Looks like a real cube. Ready to solve.' : validation.message)
   return (
     <>
-      <h2>Check the colours</h2>
+      <StageHeading>Check the colours</StageHeading>
       <p className={styles.instruction}>Tap a sticker to change its colour. W white, Y yellow, R red, O orange, G green, B blue.</p>
       <CubeNet state={state} marked={marked} selected={selected} onPick={setSelected} />
       {selected !== null && (

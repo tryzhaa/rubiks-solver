@@ -125,33 +125,36 @@ function Garden({ env }: { env: ClientEnv }) {
 
   return (
     <>
-      <div style={{ position: 'fixed', inset: 0 }}>
-        <SceneErrorBoundary>
-          <GardenScene
-            tier={env.tier}
-            seed={SEED}
-            reducedMotion={env.reducedMotion}
-            moves={moves}
-            startMoves={puzzle.startMoves}
-            player={handle}
-            onHotspot={onHotspot}
-            onContextLost={() => setContextLost(true)}
-          />
-        </SceneErrorBoundary>
+      {/* While the scanner is open, the garden and its controls can't be focused or clicked. */}
+      <div inert={scannerOpen}>
+        <div style={{ position: 'fixed', inset: 0 }}>
+          <SceneErrorBoundary>
+            <GardenScene
+              tier={env.tier}
+              seed={SEED}
+              reducedMotion={env.reducedMotion}
+              moves={moves}
+              startMoves={puzzle.startMoves}
+              player={handle}
+              onHotspot={onHotspot}
+              onContextLost={() => setContextLost(true)}
+            />
+          </SceneErrorBoundary>
+        </div>
+        <Overlay
+          step={bannerFor(puzzle.solution.steps, player.index)}
+          moveIndex={player.index}
+          moveCount={moves.length}
+          playing={player.playing}
+          onPlayPause={() =>
+            handle.dispatch(player.playing ? { type: 'pause' } : { type: 'play', moveCount: moves.length })
+          }
+          onPrev={() => handle.dispatch({ type: 'prev' })}
+          onNext={() => handle.dispatch({ type: 'next', moveCount: moves.length })}
+          onNewScramble={onNewScramble}
+          toast={toast}
+        />
       </div>
-      <Overlay
-        step={bannerFor(puzzle.solution.steps, player.index)}
-        moveIndex={player.index}
-        moveCount={moves.length}
-        playing={player.playing}
-        onPlayPause={() =>
-          handle.dispatch(player.playing ? { type: 'pause' } : { type: 'play', moveCount: moves.length })
-        }
-        onPrev={() => handle.dispatch({ type: 'prev' })}
-        onNext={() => handle.dispatch({ type: 'next', moveCount: moves.length })}
-        onNewScramble={onNewScramble}
-        toast={toast}
-      />
       {scannerOpen && <Scanner onClose={closeScanner} onSolved={onScanned} />}
     </>
   )
