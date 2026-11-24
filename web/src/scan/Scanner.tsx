@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useReducer, useRef, useState } from 'react'
 import type { Face } from '@/cube/moves'
 import { type Solution, solve } from '@/solver/solve'
+import { STEADY_FRAMES, autoCaptureReady, averageFrames, nearestFace } from './autoCapture'
 import { CAMERA_MESSAGES, type CameraFailure, canRetry } from './camera'
 import type { RGB } from './colour'
 import { CubeNet } from './CubeNet'
@@ -18,6 +19,8 @@ const SAMPLE_MS = 100
 const SAMPLE_SIZE = 240
 const CENTRES = [4, 13, 22, 31, 40, 49]
 const PALETTE_ORDER: Face[] = ['U', 'D', 'R', 'L', 'F', 'B']
+/** How long the "Got it" confirmation stays after a face is stored automatically. */
+const CONFIRM_MS = 1500
 const UNSOLVABLE = "This cube can't be solved as entered. Check the colours against your cube."
 
 interface ScannerProps {
@@ -95,10 +98,21 @@ function StageHeading({ children }: { children: React.ReactNode }) {
 function CameraStage({ scan, dispatch }: { scan: ScanState; dispatch: (a: ScanAction) => void }) {
   const { status, videoRef, retry } = useCamera()
   const [samples, setSamples] = useState<RGB[] | null>(null)
+  const [stored, setStored] = useState<string | null>(null)
   const current = SCAN_ORDER[scan.face]
+  const expected = current.face
+
+  // Clear the "Got it" confirmation a moment after it appears.
+  useEffect(() => {
+    if (!stored) return
+    const timer = setTimeout(() => setStored(null), CONFIRM_MS)
+    return () => clearTimeout(timer)
+  }, [stored])
 
   useEffect(() => {
     if (status !== 'live') return
+    // Recent frames for this face; a face held still with the right centre is stored automatically.
+    let frames: RGB[][] = []
     const canvas = document.createElement('canvas')
     const context = canvas.getContext('2d', { willReadFrequently: true })
     const timer = setInterval(() => {
@@ -112,10 +126,17 @@ function CameraStage({ scan, dispatch }: { scan: ScanState; dispatch: (a: ScanAc
         canvas.height = height
       }
       context.drawImage(video, 0, 0, width, height)
-      setSamples(sampleGrid(context.getImageData(0, 0, width, height).data, width, height))
+      const latest = sampleGrid(context.getImageData(0, 0, width, height).data, width, height)
+      setSamples(latest)
+      frames = [...frames, latest].slice(-STEADY_FRAMES)
+      if (autoCaptureReady(frames, expected)) {
+        dispatch({ type: 'capture', samples: averageFrames(frames) })
+        setStored(SCAN_ORDER.find((f) => f.face === expected)!.colour)
+        frames = []
+      }
     }, SAMPLE_MS)
     return () => clearInterval(timer)
-  }, [status, videoRef])
+  }, [status, videoRef, expected, dispatch])
 
   const failed = status !== 'idle' && status !== 'starting' && status !== 'live'
   return (
@@ -129,7 +150,11 @@ function CameraStage({ scan, dispatch }: { scan: ScanState; dispatch: (a: ScanAc
         <div className={styles.grid} aria-hidden="true">
           {Array.from({ length: 9 }, (_, i) => (
             <div key={i} className={styles.cell} style={i === 4 ? { borderColor: STICKER_HEX[current.face] } : undefined}>
-              {samples && <span className={styles.swatch} style={{ background: `rgb(${samples[i].join(',')})` }} />}
+              {samples && (
+                <span className={styles.swatch} style={{ background: `rgb(${samples[i].join(',')})` }}>
+                  {LETTERS[nearestFace(samples[i])]}
+                </span>
+              )}
             </div>
           ))}
         </div>
@@ -147,15 +172,21 @@ function CameraStage({ scan, dispatch }: { scan: ScanState; dispatch: (a: ScanAc
           </div>
         )}
       </div>
+      <p className={styles.autoStatus} role="status">
+        {stored
+          ? `Got it: ${stored} ✓`
+          : status === 'live'
+            ? 'Hold the face steady inside the grid. It is stored by itself.'
+            : ''}
+      </p>
       <FaceChips scan={scan} dispatch={dispatch} />
       <div className={styles.actions}>
         <button
           type="button"
-          className={styles.primary}
           disabled={status !== 'live' || !samples}
           onClick={() => samples && dispatch({ type: 'capture', samples })}
         >
-          Capture
+          Capture now
         </button>
         <button type="button" onClick={() => dispatch({ type: 'manual' })}>
           Enter colours by hand

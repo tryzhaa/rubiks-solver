@@ -97,12 +97,26 @@
   place-items: center;
 }
 
+/* Live colour seen in the cell, labelled with its best-guess letter. */
 .swatch {
-  width: 36%;
+  width: 44%;
   aspect-ratio: 1;
   border-radius: 50%;
   border: 2px solid #fff;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  font-weight: 800;
+  color: #fff;
+  text-shadow: 0 0 3px rgba(0, 0, 0, 0.9);
+}
+
+.autoStatus {
+  min-height: 1.4em;
+  margin: 10px 0 0;
+  text-align: center;
+  line-height: 1.4;
 }
 
 .notice {
