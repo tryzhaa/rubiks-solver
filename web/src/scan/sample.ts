@@ -6,9 +6,14 @@ export function gridRect(width: number, height: number): { x: number; y: number;
   return { x: Math.floor((width - size) / 2), y: Math.floor((height - size) / 2), size }
 }
 
-/** Average colour of the central half of each grid cell, row by row, from RGBA pixels. */
-export function sampleGrid(pixels: Uint8ClampedArray, width: number, height: number): RGB[] {
-  const { x, y, size } = gridRect(width, height)
+/** Average colour of the central half of each cell of `rect` (default: the centred guide), row by row, from RGBA pixels. */
+export function sampleGrid(
+  pixels: Uint8ClampedArray,
+  width: number,
+  height: number,
+  rect: { x: number; y: number; size: number } = gridRect(width, height),
+): RGB[] {
+  const { x, y, size } = rect
   const cell = size / 3
   const result: RGB[] = []
   for (let r = 0; r < 3; r++) {
