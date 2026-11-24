@@ -74,6 +74,19 @@ function badPieces<S extends string>(pieces: Piece<S>[], slots: S[]): Piece<S>[]
   return pieces.filter((p) => !real.has(key(p.colours)) || seen.get(key(p.colours))! > 1)
 }
 
+/**
+ * Corners whose colours run the wrong way round: read in reference order, a real corner's colours are a
+ * rotation of its home slot's faces in reference order. A mirrored corner has the right colours but can't exist.
+ */
+function mirroredCorners(corners: Piece<CornerSlot>[]): Piece<CornerSlot>[] {
+  return corners.filter((p) => {
+    const home = CORNER_SLOTS.find((slot) => key(slot.split('')) === key(p.colours))
+    if (!home) return false // not a real colour set; badPieces reports it
+    const want = CORNER_ORDER[home]
+    return ![0, 1, 2].some((k) => p.colours.every((c, j) => c === want[(j + k) % 3]))
+  })
+}
+
 function parity(permutation: number[]): number {
   const visited = permutation.map(() => false)
   let swaps = 0
@@ -118,7 +131,7 @@ export function validateState(state: string): Validation {
 
   const corners = readPieces(state, CORNER_ORDER)
   const edges = readPieces(state, EDGE_ORDER)
-  const bad = [...badPieces(corners, CORNER_SLOTS), ...badPieces(edges, EDGE_SLOTS)]
+  const bad = [...badPieces(corners, CORNER_SLOTS), ...mirroredCorners(corners), ...badPieces(edges, EDGE_SLOTS)]
   if (bad.length > 0) {
     return fail(
       'pieces',

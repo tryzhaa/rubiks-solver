@@ -2,7 +2,8 @@ import { describe, expect, test } from 'vitest'
 import type { Face } from '@/cube/moves'
 import { SOLVED, applyMoves, faceletIndex, scramble } from '@/cube/state'
 import { mulberry32 } from '@/garden/layout/random'
-import { type EdgeSlot, slotFaces } from '@/solver/pieces'
+import { type EdgeSlot, slotFaces, stickerIndex } from '@/solver/pieces'
+import { solve } from '@/solver/solve'
 import { validateState } from './validate'
 
 function swap(s: string, i: number, j: number): string {
@@ -71,5 +72,42 @@ describe('validateState', () => {
     const v = validateState(set(set(SOLVED, 8, 'D'), 35, 'U'))
     if (v.ok) throw new Error('expected a problem')
     expect(v.stickers).toEqual(expect.arrayContaining([8, 9, 20]))
+  })
+})
+
+describe('validateState agrees with the solver', () => {
+  test('a corner with two stickers swapped (mirrored colours) is an impossible piece', () => {
+    const v = validateState(swap(SOLVED, stickerIndex('UFR', 'R'), stickerIndex('UFR', 'F')))
+    expect(v).toMatchObject({ ok: false, problem: 'pieces' })
+    if (!v.ok) expect(v.stickers).toEqual(expect.arrayContaining([8, 9, 20]))
+  })
+
+  test('valid exactly when solvable, over 3000 scrambles with two stickers swapped', () => {
+    const rng = mulberry32(31)
+    for (let i = 0; i < 3000; i++) {
+      const s = applyMoves(SOLVED, scramble(25, rng))
+      const a = Math.floor(rng() * 54)
+      const b = Math.floor(rng() * 54)
+      const broken = swap(s, a, b)
+      let solvable = true
+      try {
+        solve(broken)
+      } catch {
+        solvable = false
+      }
+      expect(validateState(broken).ok).toBe(solvable)
+    }
+  })
+
+  test('valid exactly when solvable, over 2000 scrambles with one corner mirrored', () => {
+    const rng = mulberry32(32)
+    const corners = ['UFR', 'UFL', 'UBL', 'UBR', 'DFR', 'DFL', 'DBL', 'DBR'] as const
+    for (let i = 0; i < 2000; i++) {
+      const s = applyMoves(SOLVED, scramble(25, rng))
+      const slot = corners[Math.floor(rng() * 8)]
+      const [f1, f2] = slotFaces(slot).slice(1)
+      const broken = swap(s, stickerIndex(slot, f1), stickerIndex(slot, f2))
+      expect(validateState(broken).ok).toBe(false)
+    }
   })
 })
