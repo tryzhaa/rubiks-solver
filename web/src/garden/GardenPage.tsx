@@ -5,8 +5,10 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import type { Move } from '@/cube/moves'
 import { SOLVED, applyMoves, scramble } from '@/cube/state'
 import { usePlayer } from '@/cube/usePlayer'
+import { Scanner } from '@/scan/Scanner'
 import { bannerFor } from '@/solver/progress'
 import { type Solution, solve } from '@/solver/solve'
+import { startMovesFor } from '@/solver/startMoves'
 import { Message, Overlay } from '@/ui/Overlay'
 import { SceneErrorBoundary } from '@/ui/SceneErrorBoundary'
 import { HOTSPOT_MESSAGES, type HotspotKey } from './hotspots'
@@ -20,13 +22,14 @@ const TOAST_MS = 2600
 const SEED = 1
 
 interface Puzzle {
-  scrambleMoves: Move[]
+  /** Moves that build the starting cube from solved: a scramble, or a solve played backwards for a scan. */
+  startMoves: Move[]
   solution: Solution
 }
 
 /** Scrambles a solved cube and solves it; the move arrays keep their identity for the viewer. */
 function makePuzzle(scrambleMoves: Move[]): Puzzle {
-  return { scrambleMoves, solution: solve(applyMoves(SOLVED, scrambleMoves)) }
+  return { startMoves: scrambleMoves, solution: solve(applyMoves(SOLVED, scrambleMoves)) }
 }
 
 interface ClientEnv {
@@ -89,11 +92,27 @@ function Garden({ env }: { env: ClientEnv }) {
     handle.dispatch({ type: 'reset', playing: !env.reducedMotion })
   }, [handle, env.reducedMotion])
 
+  const [scannerOpen, setScannerOpen] = useState(false)
+  const closeScanner = useCallback(() => setScannerOpen(false), [])
+  const onScanned = useCallback(
+    ({ state, solution }: { state: string; solution: Solution }) => {
+      setPuzzle({ startMoves: startMovesFor(state, solution.moves), solution })
+      handle.dispatch({ type: 'reset', playing: !env.reducedMotion })
+      setScannerOpen(false)
+    },
+    [handle, env.reducedMotion],
+  )
+
   const onHotspot = useCallback((key: HotspotKey) => {
+    if (key === 'camera') {
+      handle.dispatch({ type: 'pause' })
+      setScannerOpen(true)
+      return
+    }
     setToast(HOTSPOT_MESSAGES[key])
     clearTimeout(toastTimer.current)
     toastTimer.current = setTimeout(() => setToast(null), TOAST_MS)
-  }, [])
+  }, [handle])
   useEffect(() => () => clearTimeout(toastTimer.current), [])
 
   if (contextLost) {
@@ -113,7 +132,7 @@ function Garden({ env }: { env: ClientEnv }) {
             seed={SEED}
             reducedMotion={env.reducedMotion}
             moves={moves}
-            startMoves={puzzle.scrambleMoves}
+            startMoves={puzzle.startMoves}
             player={handle}
             onHotspot={onHotspot}
             onContextLost={() => setContextLost(true)}
@@ -133,6 +152,7 @@ function Garden({ env }: { env: ClientEnv }) {
         onNewScramble={onNewScramble}
         toast={toast}
       />
+      {scannerOpen && <Scanner onClose={closeScanner} onSolved={onScanned} />}
     </>
   )
 }
