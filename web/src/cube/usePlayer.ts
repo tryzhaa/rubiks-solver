@@ -20,6 +20,7 @@ export type PlayerAction =
   | { type: 'prev' }
   | { type: 'setSpeed'; speed: number }
   | { type: 'tick'; dt: number; moveCount: number }
+  | { type: 'reset' }
 
 export function createPlayerState(startPaused: boolean): PlayerState {
   return { index: 0, progress: 0, playing: !startPaused, speed: 1 }
@@ -37,6 +38,8 @@ export function playerReducer(state: PlayerState, action: PlayerAction): PlayerS
       return { ...state, index: Math.min(action.moveCount, state.index + 1), progress: 0, playing: false }
     case 'prev':
       return { ...state, index: Math.max(0, state.index - 1), progress: 0, playing: false }
+    case 'reset':
+      return { ...state, index: 0, progress: 0 }
     case 'setSpeed':
       return action.speed > 0 ? { ...state, speed: action.speed } : state
     case 'tick': {

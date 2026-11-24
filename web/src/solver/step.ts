@@ -21,8 +21,8 @@ export const STAGE_NAMES: Record<StageId, string> = {
   middle: 'Middle layer',
   yellowCross: 'Yellow cross',
   yellowEdges: 'Yellow edges',
-  placeCorners: 'Yellow corners: place',
-  twistCorners: 'Yellow corners: twist',
+  placeCorners: 'Place yellow corners',
+  twistCorners: 'Twist yellow corners',
   finish: 'Finish',
 }
 

@@ -9,14 +9,50 @@
   font-size: 14px;
 }
 
-.banner {
+/* Banner on the left and controls on the right; on narrow screens the controls wrap below the banner. */
+.top {
+  position: fixed;
   top: 14px;
   left: 14px;
+  right: 14px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.top > .pill {
+  position: static;
+  pointer-events: auto;
+}
+
+.banner {
+  max-width: 560px;
+}
+
+.headline {
   display: flex;
   gap: 10px;
   align-items: center;
   flex-wrap: wrap;
-  max-width: calc(100vw - 28px);
+}
+
+.counter {
+  font-variant-numeric: tabular-nums;
+}
+
+.setup,
+.why {
+  margin: 6px 0 0;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.35;
+}
+
+.setup {
+  font-weight: 700;
 }
 
 .chip {
@@ -40,9 +76,8 @@
 }
 
 .bar {
-  top: 14px;
-  right: 14px;
   display: flex;
+  flex-wrap: wrap;
   gap: 6px;
   padding: 6px;
 }
@@ -71,23 +106,22 @@
 }
 
 .toast {
-  top: 76px;
+  bottom: 70px;
   left: 50%;
   transform: translateX(-50%);
   max-width: min(520px, calc(100vw - 28px));
   text-align: center;
 }
 
-/* Phones: stack the controls under the step banner instead of on top of it. */
+/* Phones: smaller controls so the bar fits on one or two rows under the banner. */
 @media (max-width: 700px) {
-  .bar {
-    top: 64px;
-    right: auto;
-    left: 14px;
+  .bar button {
+    padding: 6px 9px;
+    font-size: 13px;
   }
 
   .toast {
-    top: 124px;
+    bottom: 96px;
   }
 }
 

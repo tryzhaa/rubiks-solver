@@ -3,53 +3,63 @@
 import styles from './overlay.module.css'
 
 export interface OverlayProps {
-  stepTitle: string
-  stepAlgorithm: string
+  /** The current step: algorithm and setup are notation strings, empty when there is none. */
+  step: { title: string; algorithm: string; setup: string; why: string }
   moveIndex: number
   moveCount: number
   playing: boolean
   onPlayPause: () => void
   onPrev: () => void
   onNext: () => void
+  onNewScramble: () => void
   /** Message from clicking a garden object, or null. */
   toast: string | null
 }
 
 export function Overlay({
-  stepTitle,
-  stepAlgorithm,
+  step,
   moveIndex,
   moveCount,
   playing,
   onPlayPause,
   onPrev,
   onNext,
+  onNewScramble,
   toast,
 }: OverlayProps) {
   return (
     <>
-      <div className={`${styles.pill} ${styles.banner}`}>
-        <span>{stepTitle}</span>
-        <span className={styles.chip}>{stepAlgorithm}</span>
-        <span>
-          {moveIndex} / {moveCount}
-        </span>
-      </div>
+      <div className={styles.top}>
+        <div className={`${styles.pill} ${styles.banner}`}>
+          <div className={styles.headline}>
+            <span>{step.title}</span>
+            {step.algorithm && <span className={styles.chip}>{step.algorithm}</span>}
+            <span className={styles.counter}>
+              {moveIndex} / {moveCount}
+            </span>
+          </div>
+          {step.setup && <p className={styles.setup}>First: {step.setup}</p>}
+          <p className={styles.why}>{step.why}</p>
+        </div>
 
-      <div className={`${styles.pill} ${styles.bar}`}>
-        <button type="button" aria-label="Previous move" onClick={onPrev} disabled={moveIndex === 0}>
-          ⏮
-        </button>
-        <button type="button" aria-label={playing ? 'Pause' : 'Play'} onClick={onPlayPause}>
-          {playing ? '⏸' : '▶'}
-        </button>
-        <button type="button" aria-label="Next move" onClick={onNext} disabled={moveIndex >= moveCount}>
-          ⏭
-        </button>
-        <button type="button" aria-label="Sound (not yet available)">
-          🔊
-        </button>
-        <button type="button">Simple view</button>
+        <div className={`${styles.pill} ${styles.bar}`}>
+          <button type="button" aria-label="Previous move" onClick={onPrev} disabled={moveIndex === 0}>
+            ⏮
+          </button>
+          <button type="button" aria-label={playing ? 'Pause' : 'Play'} onClick={onPlayPause}>
+            {playing ? '⏸' : '▶'}
+          </button>
+          <button type="button" aria-label="Next move" onClick={onNext} disabled={moveIndex >= moveCount}>
+            ⏭
+          </button>
+          <button type="button" aria-label="Sound (not yet available)">
+            🔊
+          </button>
+          <button type="button">Simple view</button>
+          <button type="button" onClick={onNewScramble}>
+            New scramble
+          </button>
+        </div>
       </div>
 
       <div className={`${styles.pill} ${styles.hint}`}>

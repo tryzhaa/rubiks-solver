@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest'
 import { formatMoves, parseMoves } from '@/cube/moves'
 import { SOLVED, applyMove, applyMoves } from '@/cube/state'
-import { StepBuilder, UnsolvableError, turnsUntil } from './step'
+import { STAGE_NAMES, StepBuilder, UnsolvableError, turnsUntil } from './step'
 
 describe('StepBuilder', () => {
   test('add records setup + algorithm × repeat as moves and applies them', () => {
@@ -25,5 +25,13 @@ describe('turnsUntil', () => {
     expect(turnsUntil(s, 'U', (x) => x === SOLVED)).toEqual([{ face: 'U', turns: 3 }])
     expect(turnsUntil(SOLVED, 'U', (x) => x === SOLVED)).toEqual([])
     expect(() => turnsUntil(SOLVED, 'U', () => false)).toThrow(UnsolvableError)
+  })
+})
+
+describe('STAGE_NAMES', () => {
+  test('no stage name has a colon, since the banner title is "<stage>: <case>"', () => {
+    for (const name of Object.values(STAGE_NAMES)) expect(name).not.toContain(':')
+    expect(STAGE_NAMES.placeCorners).toBe('Place yellow corners')
+    expect(STAGE_NAMES.twistCorners).toBe('Twist yellow corners')
   })
 })

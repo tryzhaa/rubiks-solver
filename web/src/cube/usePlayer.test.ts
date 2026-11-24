@@ -93,3 +93,10 @@ describe('controls', () => {
     expect(playerReducer(playing(), { type: 'setSpeed', speed: 0.5 }).speed).toBe(0.5)
   })
 })
+
+describe('reset', () => {
+  test('reset goes back to move 0 and keeps playing state', () => {
+    const s = playerReducer({ ...createPlayerState(false), index: 30, progress: 0.4 }, { type: 'reset' })
+    expect(s).toMatchObject({ index: 0, progress: 0, playing: true })
+  })
+})

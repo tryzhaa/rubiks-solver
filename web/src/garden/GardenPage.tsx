@@ -1,10 +1,12 @@
 'use client'
 
 import dynamic from 'next/dynamic'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { invertMoves } from '@/cube/moves'
-import { scramble } from '@/cube/state'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import type { Move } from '@/cube/moves'
+import { SOLVED, applyMoves, scramble } from '@/cube/state'
 import { usePlayer } from '@/cube/usePlayer'
+import { bannerFor } from '@/solver/progress'
+import { type Solution, solve } from '@/solver/solve'
 import { Message, Overlay } from '@/ui/Overlay'
 import { SceneErrorBoundary } from '@/ui/SceneErrorBoundary'
 import { HOTSPOT_MESSAGES, type HotspotKey } from './hotspots'
@@ -16,6 +18,16 @@ const GardenScene = dynamic(() => import('./GardenScene'), { ssr: false })
 
 const TOAST_MS = 2600
 const SEED = 1
+
+interface Puzzle {
+  scrambleMoves: Move[]
+  solution: Solution
+}
+
+/** Scrambles a solved cube and solves it; the move arrays keep their identity for the viewer. */
+function makePuzzle(scrambleMoves: Move[]): Puzzle {
+  return { scrambleMoves, solution: solve(applyMoves(SOLVED, scrambleMoves)) }
+}
 
 interface ClientEnv {
   webgl: boolean
@@ -57,13 +69,24 @@ function Garden({ env }: { env: ClientEnv }) {
   const [toast, setToast] = useState<string | null>(null)
   const toastTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
-  // Demo: the cube starts scrambled and plays the scramble backwards, ending solved.
-  const { startMoves, moves } = useMemo(() => {
-    const scrambleMoves = scramble(20, mulberry32(SEED))
-    return { startMoves: scrambleMoves, moves: invertMoves(scrambleMoves) }
-  }, [])
+  // The cube starts scrambled and plays its beginner-method solve.
+  const [puzzle, setPuzzle] = useState(() => makePuzzle(scramble(20, mulberry32(SEED))))
+  const moves = puzzle.solution.moves
 
   const [player, handle] = usePlayer(env.reducedMotion)
+
+  const onNewScramble = useCallback(() => {
+    let next: Puzzle
+    try {
+      next = makePuzzle(scramble(20))
+    } catch (error) {
+      // Generated scrambles are always solvable; keep the current solve if that ever fails.
+      console.error(error)
+      return
+    }
+    setPuzzle(next)
+    handle.dispatch({ type: 'reset' })
+  }, [handle])
 
   const onHotspot = useCallback((key: HotspotKey) => {
     setToast(HOTSPOT_MESSAGES[key])
@@ -89,7 +112,7 @@ function Garden({ env }: { env: ClientEnv }) {
             seed={SEED}
             reducedMotion={env.reducedMotion}
             moves={moves}
-            startMoves={startMoves}
+            startMoves={puzzle.scrambleMoves}
             player={handle}
             onHotspot={onHotspot}
             onContextLost={() => setContextLost(true)}
@@ -97,8 +120,7 @@ function Garden({ env }: { env: ClientEnv }) {
         </SceneErrorBoundary>
       </div>
       <Overlay
-        stepTitle="Yellow cross: L-shape"
-        stepAlgorithm="F R U R' U' F'"
+        step={bannerFor(puzzle.solution.steps, player.index)}
         moveIndex={player.index}
         moveCount={moves.length}
         playing={player.playing}
@@ -107,6 +129,7 @@ function Garden({ env }: { env: ClientEnv }) {
         }
         onPrev={() => handle.dispatch({ type: 'prev' })}
         onNext={() => handle.dispatch({ type: 'next', moveCount: moves.length })}
+        onNewScramble={onNewScramble}
         toast={toast}
       />
     </>
