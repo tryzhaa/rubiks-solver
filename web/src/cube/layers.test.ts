@@ -38,3 +38,11 @@ describe('cubieInLayer', () => {
     }
   })
 })
+
+describe('whole-cube turns', () => {
+  test('rotations turn every layer in the same direction as their face', () => {
+    expect(layerTurn({ face: 'x', turns: 1 })).toEqual({ axis: 'x', layer: 'all', quarterTurns: -1 })
+    expect(layerTurn({ face: 'y', turns: 3 })).toEqual({ axis: 'y', layer: 'all', quarterTurns: 1 })
+    expect(cubieInLayer([-1, 0, 1], layerTurn({ face: 'z', turns: 2 }))).toBe(true)
+  })
+})

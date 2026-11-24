@@ -1,4 +1,4 @@
-import type { Face, Move } from './moves'
+import type { Face, Move, Rotation } from './moves'
 
 /** Facelet order: U R F D L B, nine stickers per face, row-major (Kociemba layout). */
 export const SOLVED = 'UUUUUUUUURRRRRRRRRFFFFFFFFFDDDDDDDDDLLLLLLLLLBBBBBBBBB'
@@ -49,13 +49,29 @@ function rotate(v: Vec, axis: 0 | 1 | 2): Vec {
   return [-y, x, z]
 }
 
-/** destination[i] = index the sticker at i moves to under one clockwise quarter turn of the face. */
-function buildPermutation(face: Face): number[] {
+/** The sticker index on `face` of the cubie at `pos` (each component -1, 0 or 1). */
+export function faceletIndex(face: Face, pos: Vec): number {
+  const { axis, sign } = FACE_AXIS[face]
+  const normal: Vec = [0, 0, 0]
+  normal[axis] = sign
+  const index = INDEX_BY_KEY.get(key(pos, normal))
+  if (index === undefined) throw new Error(`No ${face} sticker at ${pos.join(',')}`)
+  return index
+}
+
+/** Whole-cube turns move every layer the way their face turn moves its own. */
+const ROTATION_FACE: Record<Rotation, Face> = { x: 'R', y: 'U', z: 'F' }
+
+/**
+ * destination[i] = index the sticker at i moves to under one clockwise quarter turn of the face,
+ * or of the whole cube when `wholeCube` is set.
+ */
+function buildPermutation(face: Face, wholeCube = false): number[] {
   const { axis, sign } = FACE_AXIS[face]
   // Clockwise seen from outside = -90 degrees about the outward normal.
   const steps = sign === 1 ? 3 : 1
   return FACELETS.map((f, i) => {
-    if (f.pos[axis] !== sign) return i
+    if (!wholeCube && f.pos[axis] !== sign) return i
     let pos = f.pos
     let normal = f.normal
     for (let s = 0; s < steps; s++) {
@@ -68,7 +84,10 @@ function buildPermutation(face: Face): number[] {
   })
 }
 
-const PERMUTATIONS: Record<Face, number[]> = {
+const PERMUTATIONS: Record<Face | Rotation, number[]> = {
+  x: buildPermutation(ROTATION_FACE.x, true),
+  y: buildPermutation(ROTATION_FACE.y, true),
+  z: buildPermutation(ROTATION_FACE.z, true),
   U: buildPermutation('U'),
   D: buildPermutation('D'),
   L: buildPermutation('L'),

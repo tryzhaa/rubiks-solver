@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import { formatMove, invertMove, invertMoves, parseMoves } from './moves'
+import { formatMove, formatMoves, invertMove, invertMoves, parseMoves } from './moves'
 
 describe('parseMoves', () => {
   test('parses quarter, double and prime turns', () => {
@@ -39,5 +39,16 @@ describe('invert', () => {
 
   test('invertMoves reverses order and inverts each', () => {
     expect(invertMoves(parseMoves("R U2 F'")).map(formatMove).join(' ')).toBe("F U2 R'")
+  })
+})
+
+describe('whole-cube turns', () => {
+  test('parses and formats whole-cube turns', () => {
+    expect(parseMoves("x y' z2")).toEqual([
+      { face: 'x', turns: 1 },
+      { face: 'y', turns: 3 },
+      { face: 'z', turns: 2 },
+    ])
+    expect(formatMoves(parseMoves("x y' z2 R"))).toBe("x y' z2 R")
   })
 })

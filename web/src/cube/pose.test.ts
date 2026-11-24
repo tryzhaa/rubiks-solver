@@ -83,3 +83,11 @@ describe('easeInOutQuad', () => {
     }
   })
 })
+
+describe('whole-cube turns', () => {
+  test('y moves the right centre cubie to the front, like U moves its edge', () => {
+    const cubies = poseAfter([{ face: 'y', turns: 1 }])
+    const rightCentre = cubies.find((c) => c.home.join() === '1,0,0')!
+    expect(cubiePosition(rightCentre)).toEqual([0, 0, 1])
+  })
+})

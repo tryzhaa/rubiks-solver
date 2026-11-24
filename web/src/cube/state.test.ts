@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest'
 import { type Face, type Move, parseMoves } from './moves'
-import { SOLVED, applyMove, applyMoves, isSolved, scramble } from './state'
+import { mulberry32 } from '@/garden/layout/random'
+import { SOLVED, applyMove, applyMoves, faceletIndex, isSolved, scramble } from './state'
 
 const FACES: Face[] = ['U', 'D', 'L', 'R', 'F', 'B']
 
@@ -83,5 +84,38 @@ describe('scramble', () => {
       expect([1, 2, 3]).toContain(m.turns)
     })
     expect(isSolved(applyMoves(SOLVED, ms))).toBe(false)
+  })
+})
+
+describe('whole-cube turns', () => {
+  test('x on a solved cube moves F to U, D to F, B to D, U to B', () => {
+    expect(applyMove(SOLVED, { face: 'x', turns: 1 })).toBe(
+      ['FFFFFFFFF', 'RRRRRRRRR', 'DDDDDDDDD', 'BBBBBBBBB', 'LLLLLLLLL', 'UUUUUUUUU'].join(''),
+    )
+  })
+
+  test('y on a solved cube brings R to the front', () => {
+    const s = applyMove(SOLVED, { face: 'y', turns: 1 })
+    expect(s.slice(18, 27)).toBe('RRRRRRRRR')
+    expect(s.slice(0, 9)).toBe('UUUUUUUUU')
+  })
+
+  test('z on a solved cube brings U to the right', () => {
+    expect(applyMove(SOLVED, { face: 'z', turns: 1 }).slice(9, 18)).toBe('UUUUUUUUU')
+  })
+
+  test.each([
+    ['x', 'U', 'F'],
+    ['y', 'F', 'R'],
+    ['z', 'U', 'L'],
+  ] as const)('after %s, turning %s equals turning %s first', (rot, after, before) => {
+    const start = applyMoves(SOLVED, scramble(15, mulberry32(9)))
+    const r = { face: rot, turns: 1 } as const
+    expect(applyMoves(start, [r, { face: after, turns: 1 }])).toBe(applyMoves(start, [{ face: before, turns: 1 }, r]))
+  })
+
+  test('faceletIndex finds the UF sticker on U and on F', () => {
+    expect(faceletIndex('U', [0, 1, 1])).toBe(7)
+    expect(faceletIndex('F', [0, 1, 1])).toBe(19)
   })
 })

@@ -1,10 +1,13 @@
 export type Face = 'U' | 'D' | 'L' | 'R' | 'F' | 'B'
 
-/** turns: 1 = clockwise quarter, 2 = half turn, 3 = counter-clockwise quarter. */
-export type Move = { face: Face; turns: 1 | 2 | 3 }
+/** Whole-cube turns (WCA): x turns the cube like R, y like U, z like F. */
+export type Rotation = 'x' | 'y' | 'z'
 
-const FACES: readonly string[] = ['U', 'D', 'L', 'R', 'F', 'B']
-const TOKEN = /^([UDLRFB])(['2]?)$/
+/** turns: 1 = clockwise quarter, 2 = half turn, 3 = counter-clockwise quarter. */
+export type Move = { face: Face | Rotation; turns: 1 | 2 | 3 }
+
+const FACES: readonly string[] = ['U', 'D', 'L', 'R', 'F', 'B', 'x', 'y', 'z']
+const TOKEN = /^([UDLRFBxyz])(['2]?)$/
 
 export function parseMoves(text: string): Move[] {
   const tokens = text.split(/\s+/).filter(Boolean)
@@ -14,12 +17,16 @@ export function parseMoves(text: string): Move[] {
       throw new Error(`Invalid move token: ${token}`)
     }
     const turns = match[2] === "'" ? 3 : match[2] === '2' ? 2 : 1
-    return { face: match[1] as Face, turns }
+    return { face: match[1] as Face | Rotation, turns }
   })
 }
 
 export function formatMove(m: Move): string {
   return m.face + (m.turns === 3 ? "'" : m.turns === 2 ? '2' : '')
+}
+
+export function formatMoves(ms: Move[]): string {
+  return ms.map(formatMove).join(' ')
 }
 
 export function invertMove(m: Move): Move {
