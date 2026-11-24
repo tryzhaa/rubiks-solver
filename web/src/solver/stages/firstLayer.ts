@@ -1,7 +1,18 @@
 import type { Face, Move } from '@/cube/moves'
 import { applyMoves } from '@/cube/state'
-import { crossDone } from '../goals'
-import { COLOUR_NAMES, EDGE_SLOTS, type EdgeSlot, centre, findEdge, slotFaces, sticker } from '../pieces'
+import { crossDone, firstLayerDone } from '../goals'
+import {
+  COLOUR_NAMES,
+  CORNER_SLOTS,
+  type CornerSlot,
+  EDGE_SLOTS,
+  type EdgeSlot,
+  centre,
+  findCorner,
+  findEdge,
+  slotFaces,
+  sticker,
+} from '../pieces'
 import { type StepBuilder, UnsolvableError, turnsUntil } from '../step'
 
 const U_EDGE: Record<string, EdgeSlot> = { F: 'UF', R: 'UR', B: 'UB', L: 'UL' }
@@ -17,7 +28,7 @@ function isPetal(s: string, slot: EdgeSlot): boolean {
   return slot[0] === 'U' && sticker(s, slot, 'U') === white(s)
 }
 
-function hasWhite(s: string, slot: EdgeSlot): boolean {
+function hasWhite(s: string, slot: EdgeSlot | CornerSlot): boolean {
   return slotFaces(slot).some((f) => sticker(s, slot, f) === white(s))
 }
 
@@ -126,5 +137,59 @@ export function cross(b: StepBuilder): void {
       setup,
       [{ face: at[1] as Face, turns: 2 }],
     )
+  }
+}
+
+const SEXY_MOVE: Move[] = [
+  { face: 'R', turns: 1 },
+  { face: 'U', turns: 1 },
+  { face: 'R', turns: 3 },
+  { face: 'U', turns: 3 },
+]
+
+function solvedIn(s: string, slot: CornerSlot): boolean {
+  return slotFaces(slot).every((f) => sticker(s, slot, f) === centre(s, f))
+}
+
+function cornerColours(s: string, slot: CornerSlot): [string, string, string] {
+  const [a, c, d] = slotFaces(slot)
+  return [sticker(s, slot, a), sticker(s, slot, c), sticker(s, slot, d)]
+}
+
+export function whiteCorners(b: StepBuilder): void {
+  for (let count = 0; ; count++) {
+    const s = b.state
+    if (firstLayerDone(s)) return
+    if (count >= 8) throw new UnsolvableError('corners')
+    const onTop = CORNER_SLOTS.find((c) => c[0] === 'U' && hasWhite(s, c))
+    if (onTop) {
+      const colours = cornerColours(s, onTop)
+      const others = colours.filter((c) => c !== white(s)).sort().join('')
+      const turnToSlot = turnsUntil(s, 'y', (t) => [centre(t, 'F'), centre(t, 'R')].sort().join('') === others)
+      const held = applyMoves(s, turnToSlot)
+      const above = turnsUntil(held, 'U', (t) => findCorner(t, ...colours) === 'UFR')
+      const ready = applyMoves(held, above)
+      const repeat = [1, 2, 3, 4, 5].find((n) => solvedIn(applyMoves(ready, Array(n).fill(SEXY_MOVE).flat()), 'DFR'))
+      if (!repeat) throw new UnsolvableError('corners')
+      b.add(
+        'corners',
+        'Corner on top',
+        "Hold the corner's slot at front-right with the corner above it, then repeat R U R' U' until the white sticker faces down.",
+        [...turnToSlot, ...above],
+        SEXY_MOVE,
+        repeat,
+      )
+    } else {
+      const stuck = CORNER_SLOTS.find((c) => c[0] === 'D' && !solvedIn(s, c))
+      if (!stuck) throw new UnsolvableError('corners')
+      const colours = cornerColours(s, stuck)
+      b.add(
+        'corners',
+        'Corner stuck in the bottom',
+        "This corner is in the wrong spot or twisted. One R U R' U' lifts it to the top so it can be placed.",
+        turnsUntil(s, 'y', (t) => findCorner(t, ...colours) === 'DFR'),
+        SEXY_MOVE,
+      )
+    }
   }
 }
