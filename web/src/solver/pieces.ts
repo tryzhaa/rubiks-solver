@@ -37,9 +37,14 @@ function slotPosition(slot: EdgeSlot | CornerSlot): Vec {
   return pos
 }
 
+/** The facelet index of `face` on the piece in `slot`. */
+export function stickerIndex(slot: EdgeSlot | CornerSlot, face: Face): number {
+  return faceletIndex(face, slotPosition(slot))
+}
+
 /** The colour letter showing on `face` of the piece in `slot`. */
 export function sticker(state: string, slot: EdgeSlot | CornerSlot, face: Face): string {
-  return state[faceletIndex(face, slotPosition(slot))]
+  return state[stickerIndex(slot, face)]
 }
 
 export function centre(state: string, face: Face): string {
